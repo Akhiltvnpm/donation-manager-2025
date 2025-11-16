@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>പുതുക്കുളങ്ങര ക്ഷേത്രം - Donation App</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font family -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            color: #1a1a1a;
+        }
+        /* Custom styles for the Malayalam headings - Sunrise Orange */
+        .malayalam-heading {
+            font-weight: 700;
+            color: #ff8c00; /* Sunrise Orange */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Print-specific CSS for A4 and page numbers */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                font-size: 10pt; /* Smaller font for print */
+            }
+            .no-print {
+                display: none !important;
+            }
+            .printable-area {
+                width: 210mm; /* A4 width */
+                min-height: 297mm; /* A4 height */
+                margin: 0 auto;
+                padding: 10mm;
+            }
+            .donation-table-wrapper {
+                overflow-x: visible !important;
+            }
+            .donation-table th, .donation-table td {
+                padding: 4px 8px;
+                border: 1px solid #000;
+            }
+            /* Page Numbering */
+            @page {
+                size: A4;
+                margin: 1cm;
+                @bottom-center {
+                    content: "Page " counter(page) " of " counter(pages);
+                    font-size: 8pt;
+                    color: #555;
+                }
+            }
+            /* Print Header */
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 10mm;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Print Header (Hidden on screen) -->
+    <div id="print-header" class="print-header hidden">
+        <h1 class="text-xl malayalam-heading">പുതുക്കുളങ്ങര പുന്നശ്ശേരി ശ്രീ ഭഗവതി ക്ഷേത്രം</h1>
+        <h2 class="text-lg text-gray-700">തൃക്കാർത്തിക മഹോത്സവം 2025</h2>
+    </div>
+
+    <div class="printable-area">
+        <header class="text-center mb-8 no-print">
+            <h1 class="text-3xl font-bold malayalam-heading">പുതുക്കുളങ്ങര പുന്നശ്ശേരി ശ്രീ ഭഗവതി ക്ഷേത്രം</h1>
+            <h2 class="text-xl text-gray-600 mt-1">തൃക്കാർത്തിക മഹോത്സവം 2025</h2>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Donation Form (Always visible, non-print) -->
+            <section class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg no-print h-fit">
+                <h3 class="text-2xl font-semibold mb-4 text-gray-800" id="form-title">പുതിയ രസീത് ചേർക്കുക (Add New Receipt)</h3>
+                <form id="donation-form" class="space-y-4">
+                    <input type="hidden" id="donation-id" value="">
+
+                    <!-- Area (Sticky Field) -->
+                    <div>
+                        <label for="area" class="block text-sm font-medium text-gray-700">ഏരിയ (Area) - (Sticky)</label>
+                        <input type="text" id="area" name="area" required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                    </div>
+
+                    <!-- Serial Number -->
+                    <div>
+                        <label for="serial" class="block text-sm font-medium text-gray-700">സീരിയൽ നമ്പർ (Serial No.)</label>
+                        <input type="number" id="serial" name="serial" required min="1"
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <label for="date" class="block text-sm font-medium text-gray-700">തീയതി (Date)</label>
+                        <input type="date" id="date" name="date" required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                    </div>
+
+                    <!-- Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">പേര് (Name)</label>
+                        <input type="text" id="name" name="name" required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                    </div>
+
+                    <!-- Address -->
+                    <div>
+                        <label for="address" class="block text-sm font-medium text-gray-700">വിലാസം (Address)</label>
+                        <textarea id="address" name="address" rows="2" required
+                              class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border"></textarea>
+                    </div>
+
+                    <!-- Amount (INR) -->
+                    <div>
+                        <label for="amount" class="block text-sm font-medium text-gray-700">തുക (Amount) - INR</label>
+                        <input type="number" id="amount" name="amount" required min="1" step="any"
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">നില (Status)</label>
+                        <select id="status" name="status"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                            <option value="Unpaid">Unpaid</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                    </div>
+
+                    <!-- Payment Mode (Conditional) -->
+                    <div id="payment-mode-container" class="hidden">
+                        <label for="payment-mode" class="block text-sm font-medium text-gray-700">പേയ്‌മെന്റ് രീതി (Payment Mode)</label>
+                        <select id="payment-mode" name="payment-mode"
+                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                            <option value="Cash">Cash</option>
+                            <option value="UPI">UPI</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="save-button"
+                            class="w-full py-3 px-4 border border-transparent rounded-lg shadow-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out font-semibold">
+                        രേഖപ്പെടുത്തുക (Save Record)
+                    </button>
+                    <button type="button" id="cancel-edit-button"
+                            class="hidden w-full py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out font-semibold mt-2"
+                            onclick="resetForm()">
+                        എഡിറ്റ് ചെയ്യൽ റദ്ദാക്കുക (Cancel Edit)
+                    </button>
+                    <p id="error-message" class="text-sm text-red-600 mt-2 hidden"></p>
+                </form>
+            </section>
+
+            <!-- Donation List (Report) and Controls -->
+            <section class="lg:col-span-2 space-y-6">
+
+                <!-- Summary Panel (NEW) -->
+                <div class="bg-white p-6 rounded-xl shadow-lg no-print">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Summary റിപ്പോർട്ട്</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+
+                        <!-- Total Bills Count -->
+                        <div class="p-3 bg-indigo-50 rounded-lg shadow-sm">
+                            <div class="text-xs font-medium text-indigo-600">Total Bills</div>
+                            <div id="stat-count" class="text-2xl font-bold text-indigo-800">0</div>
+                        </div>
+
+                        <!-- Total Amount -->
+                        <div class="p-3 bg-gray-50 rounded-lg shadow-sm">
+                            <div class="text-xs font-medium text-gray-600">Total Pledged (₹)</div>
+                            <div id="stat-total-amount" class="text-2xl font-bold text-gray-800">0.00</div>
+                        </div>
+
+                        <!-- Total Paid -->
+                        <div class="p-3 bg-green-50 rounded-lg shadow-sm col-span-2 md:col-span-1">
+                            <div class="text-xs font-medium text-green-600">Total Paid (₹)</div>
+                            <div id="stat-total-paid" class="text-2xl font-bold text-green-800">0.00</div>
+                            <div class="text-xs mt-1 text-gray-500">
+                                <span class="font-semibold">Cash: </span><span id="stat-paid-cash">0.00</span> |
+                                <span class="font-semibold">UPI: </span><span id="stat-paid-upi">0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Total Unpaid -->
+                        <div class="p-3 bg-red-50 rounded-lg shadow-sm">
+                            <div class="text-xs font-medium text-red-600">Total Unpaid (₹)</div>
+                            <div id="stat-total-unpaid" class="text-2xl font-bold text-red-800">0.00</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Summary Panel -->
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-center mb-4 no-print">
+                        <h3 class="text-2xl font-semibold text-gray-800">നിലവിലുള്ള രസീതുകൾ (Current Receipts)</h3>
+                        <!-- Compact Buttons -->
+                        <div class="space-x-1 flex items-center">
+                            <!-- Import CSV Control -->
+                            <input type="file" id="import-file" accept=".csv" class="hidden" onchange="importDonations(event)">
+                            <button onclick="document.getElementById('import-file').click()" 
+                                class="bg-yellow-500 text-white py-1.5 px-3 text-sm rounded-lg hover:bg-yellow-600 transition duration-150 font-semibold">
+                                ഇംപോർട്ട് (Import)
+                            </button>
+                            <!-- Existing Export/Print -->
+                            <button onclick="exportToCSV()" 
+                                class="bg-green-500 text-white py-1.5 px-3 text-sm rounded-lg hover:bg-green-600 transition duration-150 font-semibold">
+                                എക്സ്പോർട്ട് (CSV)
+                            </button>
+                            <button onclick="window.print()" 
+                                class="bg-blue-500 text-white py-1.5 px-3 text-sm rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">
+                                പ്രിന്റ് (PDF)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="loading" class="text-center text-gray-500 py-10">Data Loading...</div>
+                    <p id="auth-status" class="text-center text-sm text-red-500 my-4 hidden">Authentication in progress or failed.</p>
+
+                    <!-- Data Table (Printable) -->
+                    <div class="overflow-x-auto donation-table-wrapper">
+                        <table class="min-w-full divide-y divide-gray-200 donation-table">
+                            <thead class="bg-indigo-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ഏരിയ</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">സീരിയൽ</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">തീയതി</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">പേര്</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">വിലാസം</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">തുക (₹)</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">നില</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">പ്രവർത്തനങ്ങൾ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="donation-list" class="bg-white divide-y divide-gray-200">
+                                <!-- Donation rows will be inserted here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Custom Modal for Confirmation/Error (instead of alert/confirm) -->
+                <div id="custom-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+                        <h4 id="modal-title" class="text-lg font-bold mb-4"></h4>
+                        <p id="modal-body" class="mb-6"></p>
+                        <div class="flex justify-end space-x-2">
+                            <button id="modal-cancel" class="py-2 px-4 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
+                            <button id="modal-confirm" class="py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- Firebase SDK Imports and Core Application Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, setDoc, onSnapshot, query, orderBy, addDoc, updateDoc, deleteDoc, runTransaction, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // =========================================================================
+        // --- !!! STEP 1: YOUR FIREBASE PROJECT DETAILS ARE INSERTED BELOW !!! ---
+        // =========================================================================
+
+        // 1. App Identifier: Using your project ID for consistency with Firestore rules.
+        const appId = 'pudukulangara-donation-app'; 
+
+        // 2. Public Firebase Configuration: THIS IS YOUR COPIED CONFIGURATION.
+        const firebaseConfig = {
+            apiKey: "AIzaSyC94u2qlAoqNj2HhYFfjcoiAO_AvAUMio8", 
+            authDomain: "pudukulangara-donation-app.firebaseapp.com",
+            projectId: "pudukulangara-donation-app", 
+            storageBucket: "pudukulangara-donation-app.firebasestorage.app",
+            messagingSenderId: "264634587234",
+            appId: "1:264634587234:web:f8bfaea650b331d3ad993b"
+        };
+        
+        // =========================================================================
+        // --- !!! END OF CONFIGURATION (DO NOT EDIT BELOW THIS LINE) !!! ---
+        // =========================================================================
+
+
+        let db, auth, userId = null;
+        let isAuthReady = false;
+        let currentDonations = [];
+        let globalNextSerial = 1;
+        let globalStickyArea = '';
+
+        const AUTH_STATUS_ELEM = document.getElementById('auth-status');
+        const LOADING_ELEM = document.getElementById('loading');
+        const DONATION_LIST_ELEM = document.getElementById('donation-list');
+        const FORM_ELEM = document.getElementById('donation-form');
+        const ERROR_ELEM = document.getElementById('error-message');
+        const STATUS_ELEM = document.getElementById('status');
+        const PAYMENT_MODE_CONTAINER = document.getElementById('payment-mode-container');
+        const FORM_TITLE_ELEM = document.getElementById('form-title');
+        const SAVE_BUTTON_ELEM = document.getElementById('save-button');
+        const CANCEL_EDIT_BUTTON = document.getElementById('cancel-edit-button');
+
+        // Summary Stat Elements
+        const STAT_COUNT_ELEM = document.getElementById('stat-count');
+        const STAT_TOTAL_AMOUNT_ELEM = document.getElementById('stat-total-amount');
+        const STAT_TOTAL_PAID_ELEM = document.getElementById('stat-total-paid');
+        const STAT_TOTAL_UNPAID_ELEM = document.getElementById('stat-total-unpaid');
+        const STAT_PAID_CASH_ELEM = document.getElementById('stat-paid-cash');
+        const STAT_PAID_UPI_ELEM = document.getElementById('stat-paid-upi');
+
+
+        // --- Core Firebase Initialization and Authentication ---
+        async function initFirebase() {
+            setLogLevel('debug');
+            try {
+                if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey || firebaseConfig.apiKey.includes('PASTE_')) {
+                    console.error("Firebase config is missing API key. Cannot initialize.");
+                    AUTH_STATUS_ELEM.textContent = "Error: Firebase configuration key is missing.";
+                    AUTH_STATUS_ELEM.classList.remove('hidden');
+                    return;
+                }
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                AUTH_STATUS_ELEM.textContent = "Authenticating...";
+                AUTH_STATUS_ELEM.classList.remove('hidden');
+
+                // Use standard Anonymous Sign-In for public deployment
+                await new Promise(resolve => {
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            AUTH_STATUS_ELEM.textContent = `User ID: ${userId}`;
+                            AUTH_STATUS_ELEM.classList.add('text-green-600', 'bg-green-50', 'p-2', 'rounded');
+                            isAuthReady = true;
+                            loadInitialSettings();
+                            loadDonations();
+                        } else {
+                            try {
+                                // Sign in anonymously if no user is found
+                                await signInAnonymously(auth);
+                            } catch (error) {
+                                console.error("Authentication failed:", error);
+                                AUTH_STATUS_ELEM.textContent = `Authentication Failed: ${error.message}`;
+                                AUTH_STATUS_ELEM.classList.add('text-red-600');
+                                isAuthReady = true; 
+                            }
+                        }
+                        resolve();
+                    });
+                });
+
+                // Final check to hide loading state if auth failed but completed
+                LOADING_ELEM.classList.add('hidden');
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                AUTH_STATUS_ELEM.textContent = `Init Error: ${error.message}`;
+                AUTH_STATUS_ELEM.classList.remove('hidden');
+                LOADING_ELEM.classList.add('hidden');
+            }
+        }
+
+        // --- Firestore Collection Paths ---
+        const getDonationsCollectionRef = () => {
+            if (!userId) throw new Error("User ID is not defined.");
+            // Private data path: /artifacts/{appId}/users/{userId}/donations
+            return collection(db, 'artifacts', appId, 'users', userId, 'donations');
+        };
+
+        const getSettingsDocRef = () => {
+            if (!userId) throw new Error("User ID is not defined.");
+            // Private data path for settings
+            return doc(db, 'artifacts', appId, 'users', userId, 'settings', 'user_config');
+        };
+
+        // --- Settings Management (Area/Serial) ---
+
+        async function loadInitialSettings() {
+            try {
+                const settingsRef = getSettingsDocRef();
+                const unsubscribe = onSnapshot(settingsRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        globalStickyArea = data.area || '';
+                        globalNextSerial = data.nextSerial || 1;
+                    }
+                    // Apply loaded settings to the form
+                    document.getElementById('area').value = globalStickyArea;
+                    // Only update serial if we are not currently editing
+                    if (!document.getElementById('donation-id').value) {
+                         document.getElementById('serial').value = globalNextSerial;
+                    }
+                    // Ensure the initial date is set to today
+                    document.getElementById('date').value = document.getElementById('date').value || new Date().toISOString().substring(0, 10);
+                }, (error) => {
+                    console.error("Error loading settings:", error);
+                });
+                return unsubscribe;
+            } catch (error) {
+                console.error("Could not set up settings listener:", error);
+            }
+        }
+
+        async function updateNextSerial(newSerial, newArea) {
+            try {
+                const settingsRef = getSettingsDocRef();
+                await setDoc(settingsRef, {
+                    area: newArea,
+                    nextSerial: newSerial
+                }, { merge: true });
+                console.log(`Settings updated: Next Serial to ${newSerial}, Area to ${newArea}`);
+            } catch (error) {
+                console.error("Failed to update next serial/area:", error);
+            }
+        }
+
+
+        // --- Real-time Data Listener ---
+
+        function loadDonations() {
+            if (!isAuthReady || !userId) return;
+
+            LOADING_ELEM.classList.remove('hidden');
+
+            try {
+                // NOTE: Using orderBy('serial', 'asc') is included here for better UX, 
+                // but for large datasets, consider fetching all and sorting client-side 
+                // to avoid Firestore index errors.
+                const q = query(getDonationsCollectionRef(), orderBy('serial', 'asc'));
+
+                onSnapshot(q, (snapshot) => {
+                    currentDonations = [];
+                    let maxSerial = 0;
+                    DONATION_LIST_ELEM.innerHTML = ''; // Clear existing rows
+
+                    // Summary Counters
+                    let totalCount = 0;
+                    let totalAmount = 0;
+                    let totalUnpaid = 0;
+                    let totalPaidCash = 0;
+                    let totalPaidUPI = 0;
+
+                    snapshot.docs.forEach(doc => {
+                        const data = doc.data();
+                        const donation = { id: doc.id, ...data };
+                        currentDonations.push(donation);
+                        maxSerial = Math.max(maxSerial, donation.serial || 0);
+                        const amount = donation.amount || 0;
+
+                        // --- Calculate Summary Stats ---
+                        totalCount++;
+                        totalAmount += amount;
+
+                        if (donation.status === 'Paid') {
+                            if (donation.paymentMode === 'Cash') {
+                                totalPaidCash += amount;
+                            } else if (donation.paymentMode === 'UPI') {
+                                totalPaidUPI += amount;
+                            }
+                        } else {
+                            totalUnpaid += amount;
+                        }
+                        // -----------------------------
+
+
+                        // Render row
+                        const row = DONATION_LIST_ELEM.insertRow();
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${donation.area || ''}</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-indigo-600">${donation.serial || ''}</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${donation.date || ''}</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${donation.name || ''}</td>
+                            <td class="px-3 py-2 text-sm text-gray-500 max-w-xs overflow-hidden text-ellipsis">${donation.address || ''}</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm font-bold text-right">${(donation.amount || 0).toFixed(2)}</td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${donation.status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${donation.status || 'Unpaid'}
+                                </span>
+                                ${donation.status === 'Paid' && donation.paymentMode ? `<br><span class="text-xs text-gray-500">(${donation.paymentMode})</span>` : ''}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-right text-sm font-medium no-print">
+                                <button onclick="editDonation('${doc.id}')" class="text-indigo-600 hover:text-indigo-900 mr-2">Edit</button>
+                                <button onclick="handleDelete('${doc.id}')" class="text-red-600 hover:text-red-900">Delete</button>
+                            </td>
+                        `;
+                    });
+
+                    // --- Update Summary DOM Elements ---
+                    const totalPaid = totalPaidCash + totalPaidUPI;
+                    
+                    // Helper for Indian numbering format
+                    const toINR = (num) => num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    
+                    STAT_COUNT_ELEM.textContent = totalCount.toLocaleString();
+                    STAT_TOTAL_AMOUNT_ELEM.textContent = toINR(totalAmount);
+                    STAT_TOTAL_PAID_ELEM.textContent = toINR(totalPaid);
+                    STAT_TOTAL_UNPAID_ELEM.textContent = toINR(totalUnpaid);
+                    STAT_PAID_CASH_ELEM.textContent = toINR(totalPaidCash);
+                    STAT_PAID_UPI_ELEM.textContent = toINR(totalPaidUPI);
+                    // -----------------------------------
+
+
+                    // Update global serial and apply to form if not in edit mode
+                    globalNextSerial = maxSerial + 1;
+                    if (!document.getElementById('donation-id').value) {
+                        document.getElementById('serial').value = globalNextSerial;
+                    }
+
+                    LOADING_ELEM.classList.add('hidden');
+                }, (error) => {
+                    console.error("Error fetching documents:", error);
+                    LOADING_ELEM.classList.add('hidden');
+                    ERROR_ELEM.textContent = `Failed to load data: ${error.message}`;
+                    ERROR_ELEM.classList.remove('hidden');
+                });
+
+            } catch (e) {
+                console.error("Firestore query error:", e);
+                LOADING_ELEM.classList.add('hidden');
+                ERROR_ELEM.textContent = `A technical error occurred: ${e.message}`;
+                ERROR_ELEM.classList.remove('hidden');
+            }
+        }
+
+        // --- Form Submission and Data Handling ---
+
+        FORM_ELEM.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            ERROR_ELEM.classList.add('hidden');
+
+            if (!isAuthReady || !userId) {
+                ERROR_ELEM.textContent = "Application not ready (authentication error).";
+                ERROR_ELEM.classList.remove('hidden');
+                return;
+            }
+
+            const id = document.getElementById('donation-id').value;
+            const status = STATUS_ELEM.value;
+            const isEditing = !!id;
+            const serialValue = parseInt(document.getElementById('serial').value);
+
+            // --- 1. UNIQUE SERIAL NUMBER CHECK (CRITICAL) ---
+            // Check if the serial number is already in use by another donation.
+            const isDuplicate = currentDonations.some(d => d.serial === serialValue && d.id !== id);
+
+            if (isDuplicate) {
+                ERROR_ELEM.textContent = `Error: Serial Number ${serialValue} already exists. Please use a unique number.`;
+                ERROR_ELEM.classList.remove('hidden');
+                document.getElementById('serial').focus();
+                return; 
+            }
+            // -------------------------------------------------
+
+
+            // Find the original donation to check if status was just changed to Paid
+            const originalDonation = isEditing ? currentDonations.find(d => d.id === id) : null;
+            const statusChangedToPaid = isEditing && originalDonation && originalDonation.status !== 'Paid' && status === 'Paid';
+
+            let donationData = {
+                area: document.getElementById('area').value,
+                serial: serialValue,
+                date: document.getElementById('date').value,
+                name: document.getElementById('name').value,
+                address: document.getElementById('address').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                status: status,
+                paymentMode: status === 'Paid' ? document.getElementById('payment-mode').value : null,
+                // Capture timestamp only if status changed to Paid or it's a new Paid record
+                paymentTimestamp: (statusChangedToPaid || (status === 'Paid' && !isEditing))
+                                  ? new Date().toISOString()
+                                  : (originalDonation ? originalDonation.paymentTimestamp : null), // Keep existing timestamp if status was already paid
+            };
+            
+            // Explicitly delete timestamp/mode if status is changed to Unpaid
+            if (status === 'Unpaid') {
+                 donationData.paymentTimestamp = null;
+                 donationData.paymentMode = null;
+            }
+
+
+            // Use runTransaction to handle the nextSerial/area update atomically only for new records
+            if (!isEditing) {
+                try {
+                    await runTransaction(db, async (transaction) => {
+                        // 1. Check if the serial number is the global next serial (auto-increment path)
+                        // If it is, update the global settings
+                        if (donationData.serial >= globalNextSerial) {
+                             transaction.set(getSettingsDocRef(), {
+                                nextSerial: donationData.serial + 1,
+                                area: donationData.area
+                            }, { merge: true });
+                        }
+
+                        // 2. Add the new donation
+                        transaction.set(doc(getDonationsCollectionRef()), donationData);
+
+                        FORM_TITLE_ELEM.textContent = "Saving...";
+                    });
+                    console.log("New donation added and serial/area updated successfully!");
+                    resetForm();
+
+                } catch (error) {
+                    console.error("Transaction failed:", error);
+                    ERROR_ELEM.textContent = `Failed to save new record: ${error.message}`;
+                    ERROR_ELEM.classList.remove('hidden');
+                } finally {
+                    FORM_TITLE_ELEM.textContent = "പുതിയ രസീത് ചേർക്കുക (Add New Receipt)";
+                }
+            } else {
+                // Update Existing Document
+                try {
+                    await setDoc(doc(getDonationsCollectionRef(), id), donationData, { merge: true });
+                    console.log("Record updated successfully!");
+                    resetForm();
+
+                    // Update the next serial/area if the edited record had the highest serial
+                    if (donationData.serial >= globalNextSerial) {
+                        await updateNextSerial(donationData.serial + 1, donationData.area);
+                    }
+
+                } catch (error) {
+                    console.error("Update failed:", error);
+                    ERROR_ELEM.textContent = `Failed to update record: ${error.message}`;
+                    ERROR_ELEM.classList.remove('hidden');
+                }
+            }
+        });
+
+        // --- Editing Functions ---
+
+        window.editDonation = (id) => {
+            const donation = currentDonations.find(d => d.id === id);
+            if (!donation) {
+                console.error("Donation not found for ID:", id);
+                return;
+            }
+
+            // Populate form for editing
+            document.getElementById('donation-id').value = id;
+            document.getElementById('area').value = donation.area || globalStickyArea;
+            document.getElementById('serial').value = donation.serial;
+            document.getElementById('date').value = donation.date;
+            document.getElementById('name').value = donation.name;
+            document.getElementById('address').value = donation.address;
+            document.getElementById('amount').value = donation.amount;
+            STATUS_ELEM.value = donation.status || 'Unpaid';
+            document.getElementById('payment-mode').value = donation.paymentMode || 'Cash';
+
+            // Show payment mode if Paid
+            togglePaymentMode(donation.status === 'Paid');
+
+            FORM_TITLE_ELEM.textContent = `രസീത് എഡിറ്റ് ചെയ്യുക (Editing Serial No. ${donation.serial})`;
+            SAVE_BUTTON_ELEM.textContent = "മാറ്റങ്ങൾ സേവ് ചെയ്യുക (Save Changes)";
+            CANCEL_EDIT_BUTTON.classList.remove('hidden');
+            document.getElementById('area').focus();
+        };
+
+        window.resetForm = () => {
+            document.getElementById('donation-id').value = '';
+            FORM_ELEM.reset();
+            // Re-apply sticky values
+            document.getElementById('area').value = globalStickyArea;
+            document.getElementById('serial').value = globalNextSerial;
+            document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+            togglePaymentMode(false); // Hide payment mode
+            ERROR_ELEM.classList.add('hidden'); // Clear error message
+
+            FORM_TITLE_ELEM.textContent = "പുതിയ രസീത് ചേർക്കുക (Add New Receipt)";
+            SAVE_BUTTON_ELEM.textContent = "രേഖപ്പെടുത്തുക (Save Record)";
+            CANCEL_EDIT_BUTTON.classList.add('hidden');
+        };
+
+        // --- Payment Status Change Handler ---
+
+        STATUS_ELEM.addEventListener('change', (e) => {
+            togglePaymentMode(e.target.value === 'Paid');
+        });
+
+        function togglePaymentMode(show) {
+             if (show) {
+                PAYMENT_MODE_CONTAINER.classList.remove('hidden');
+            } else {
+                PAYMENT_MODE_CONTAINER.classList.add('hidden');
+            }
+        }
+
+        // --- Custom Modal/Delete Functionality ---
+
+        window.handleDelete = (id) => {
+            const donation = currentDonations.find(d => d.id === id);
+            if (!donation) return;
+
+            showModal({
+                title: `Delete Receipt #${donation.serial}?`,
+                body: `Are you sure you want to permanently delete the receipt for **${donation.name}** (Amount: ₹${donation.amount})?`,
+                onConfirm: async () => {
+                    await deleteDonation(id);
+                },
+                showCancel: true // Show both buttons for confirmation
+            });
+        };
+
+        async function deleteDonation(id) {
+             try {
+                await deleteDoc(doc(getDonationsCollectionRef(), id));
+                console.log("Record deleted successfully!");
+            } catch (error) {
+                console.error("Delete failed:", error);
+                ERROR_ELEM.textContent = `Failed to delete record: ${error.message}`;
+                ERROR_ELEM.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Generic Modal function (now supports single button mode)
+         */
+        function showModal({ title, body, onConfirm, showCancel = true }) {
+            const modal = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').innerHTML = body;
+
+            const confirmButton = document.getElementById('modal-confirm');
+            const cancelButton = document.getElementById('modal-cancel');
+
+            // Reset handlers
+            confirmButton.onclick = null;
+            cancelButton.onclick = null;
+            
+            // Set button visibility and text
+            if (showCancel) {
+                cancelButton.classList.remove('hidden');
+                confirmButton.textContent = "Confirm";
+                confirmButton.classList.remove('bg-indigo-600');
+                confirmButton.classList.add('bg-red-600'); // Use red for deletion/critical confirm
+            } else {
+                cancelButton.classList.add('hidden');
+                confirmButton.textContent = "OK";
+                confirmButton.classList.remove('bg-red-600');
+                confirmButton.classList.add('bg-indigo-600'); // Use indigo for informational 'OK'
+            }
+
+            // Set new handlers
+            const hideModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+            
+            confirmButton.onclick = () => {
+                hideModal();
+                onConfirm();
+            };
+            cancelButton.onclick = hideModal;
+
+            // Show modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // --- Export to CSV Function ---
+
+        window.exportToCSV = () => {
+            if (currentDonations.length === 0) {
+                showModal({
+                    title: "Export Error",
+                    body: "There is no data to export yet.",
+                    onConfirm: () => {},
+                    showCancel: false // Only show 'OK' button
+                });
+                return;
+            }
+
+            const header = [
+                "Area", "Serial", "Date", "Name", "Address", "Amount (INR)",
+                "Status", "Payment Mode", "Payment Timestamp"
+            ];
+
+            const csvRows = [header.join(',')];
+
+            currentDonations.forEach(d => {
+                // Escape quotes and newlines in address field
+                const sanitizedAddress = (d.address || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                
+                const values = [
+                    `"${d.area || ''}"`,
+                    d.serial,
+                    `"${d.date || ''}"`,
+                    `"${d.name || ''}"`,
+                    `"${sanitizedAddress}"`,
+                    d.amount.toFixed(2),
+                    `"${d.status || 'Unpaid'}"`,
+                    `"${d.paymentMode || ''}"`,
+                    `"${d.paymentTimestamp ? new Date(d.paymentTimestamp).toLocaleString() : ''}"`
+                ];
+                csvRows.push(values.join(','));
+            });
+
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Donation_Report_${new Date().toISOString().substring(0, 10)}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showModal({
+                    title: "Export Complete",
+                    body: "The donation report has been saved to your local downloads folder.",
+                    onConfirm: () => {},
+                    showCancel: false
+                });
+            }
+        };
+
+        // --- Import from CSV Function (NEW) ---
+
+        window.importDonations = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!isAuthReady || !userId) {
+                showModal({ title: "Import Failed", body: "Authentication is not ready.", onConfirm: () => {}, showCancel: false });
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const csvText = e.target.result;
+                await processImport(csvText);
+            };
+            reader.onerror = () => {
+                showModal({ title: "Import Error", body: "Failed to read file.", onConfirm: () => {}, showCancel: false });
+                return;
+            };
+
+            reader.readAsText(file);
+        };
+
+        async function processImport(csvText) {
+            // 1. Parse CSV (basic implementation)
+            const lines = csvText.trim().split('\n');
+            if (lines.length <= 1) {
+                showModal({ title: "Import Error", body: "The CSV file is empty or contains only a header.", onConfirm: () => {}, showCancel: false });
+                return;
+            }
+
+            // Map existing serials to their Firestore IDs for efficient updating
+            const serialToIdMap = new Map();
+            currentDonations.forEach(d => {
+                if (d.serial) {
+                    serialToIdMap.set(d.serial.toString(), d.id);
+                }
+            });
+
+            // Headers: "Area", "Serial", "Date", "Name", "Address", "Amount (INR)", "Status", "Payment Mode", "Payment Timestamp"
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const donationRows = lines.slice(1);
+            const importedDonations = [];
+            let errors = 0;
+            
+            // Find column indices
+            const colMap = {
+                area: headers.indexOf('Area'),
+                serial: headers.indexOf('Serial'),
+                date: headers.indexOf('Date'),
+                name: headers.indexOf('Name'),
+                address: headers.indexOf('Address'),
+                amount: headers.indexOf('Amount (INR)'),
+                status: headers.indexOf('Status'),
+                paymentMode: headers.indexOf('Payment Mode'),
+                paymentTimestamp: headers.indexOf('Payment Timestamp')
+            };
+
+            if (colMap.serial === -1 || colMap.amount === -1) {
+                 showModal({ title: "Import Error", body: "CSV is missing 'Serial' or 'Amount (INR)' columns. Cannot proceed.", onConfirm: () => {}, showCancel: false });
+                 return;
+            }
+
+            donationRows.forEach(line => {
+                // A basic regex to handle comma separation while respecting quotes (which contain escaped commas/newlines)
+                const values = line.match(/(?:[^,"]+|"[^"]*")+/g) || []; 
+                
+                if (values.length < headers.length) {
+                    errors++;
+                    return;
+                }
+
+                const serialValue = parseInt(values[colMap.serial]?.replace(/"/g, ''), 10);
+                const amountValue = parseFloat(values[colMap.amount]?.replace(/"/g, ''));
+                const statusValue = values[colMap.status]?.replace(/"/g, '');
+                
+                if (isNaN(serialValue) || isNaN(amountValue) || serialValue <= 0 || amountValue < 0) {
+                    errors++;
+                    return;
+                }
+
+                const data = {
+                    area: values[colMap.area]?.replace(/"/g, '') || '',
+                    serial: serialValue,
+                    date: values[colMap.date]?.replace(/"/g, '') || '',
+                    name: values[colMap.name]?.replace(/"/g, '') || '',
+                    // Remove surrounding quotes and un-escape double quotes used for escaping
+                    address: values[colMap.address]?.replace(/^"|"$/g, '').replace(/""/g, '"') || '', 
+                    amount: amountValue,
+                    status: statusValue,
+                    paymentMode: statusValue === 'Paid' ? (values[colMap.paymentMode]?.replace(/"/g, '') || 'Cash') : null,
+                    // Use stored timestamp if available, otherwise current time for paid status
+                    paymentTimestamp: statusValue === 'Paid' ? (values[colMap.paymentTimestamp]?.replace(/"/g, '') || new Date().toISOString()) : null,
+                };
+                importedDonations.push(data);
+            });
+
+            if (importedDonations.length === 0) {
+                showModal({ title: "Import Error", body: "No valid records found in the CSV file.", onConfirm: () => {}, showCancel: false });
+                return;
+            }
+
+            // 2. Write to Firestore using a Batch for efficiency (Merge/Overwrite Logic)
+            LOADING_ELEM.classList.remove('hidden');
+            let batch = writeBatch(db);
+            let updatedCount = 0;
+            let addedCount = 0;
+            const donationsRef = getDonationsCollectionRef();
+
+            try {
+                importedDonations.forEach(donation => {
+                    const existingId = serialToIdMap.get(donation.serial.toString());
+                    
+                    if (existingId) {
+                        // UPDATE: Document exists, update it by ID
+                        batch.update(doc(donationsRef, existingId), donation);
+                        updatedCount++;
+                    } else {
+                        // ADD: New serial, add a new document
+                        batch.set(doc(donationsRef), donation);
+                        addedCount++;
+                    }
+                });
+
+                await batch.commit();
+                
+                // 3. Update serial settings if necessary
+                const maxImportedSerial = importedDonations.reduce((max, d) => Math.max(max, d.serial), 0);
+                if (maxImportedSerial >= globalNextSerial && importedDonations.length > 0) {
+                     // Set the next serial to be one higher than the max imported serial
+                     // Use area of first imported item for sticky field consistency
+                     await updateNextSerial(maxImportedSerial + 1, importedDonations[0].area); 
+                }
+
+
+                showModal({
+                    title: "Import Successful",
+                    body: `Import complete. ${addedCount} new records added, ${updatedCount} records updated. ${errors} rows skipped due to errors. The table is updating now.`,
+                    onConfirm: () => {},
+                    showCancel: false // Only show 'OK' button
+                });
+
+            } catch (e) {
+                console.error("Firestore batch write failed:", e);
+                showModal({
+                    title: "Import Failed",
+                    body: `An error occurred during database write: ${e.message}`,
+                    onConfirm: () => {},
+                    showCancel: false
+                });
+            } finally {
+                 // Clear the file input for next import
+                 document.getElementById('import-file').value = '';
+                 LOADING_ELEM.classList.add('hidden');
+            }
+        }
+
+        // Initialize on load
+        window.onload = initFirebase;
+    </script>
+</body>
+</html>
+
